@@ -15,7 +15,7 @@ public class DataEntryFrame extends JInternalFrame {
             ISBN = "Book isbn ", PUBLISHER_NAME ="Publisher name", TITLE = "Book Title",
             EDITION_NUMBER = "Edition number", COPYRIGHT_NUMBER = "Copyright", IMAGE_FILE = "Book Image",
             PRICE = "Price ";
-
+        //Gui
     public DataEntryFrame(){
         super("Books Entry", true,true);
 
@@ -35,6 +35,14 @@ public class DataEntryFrame extends JInternalFrame {
         createRow(COPYRIGHT_NUMBER);
         createRow(IMAGE_FILE);
         createRow(PRICE);
+
+        Container container = getContentPane();
+        container.add( leftLabels, BorderLayout.WEST );
+        container.add( rightTextField, BorderLayout.CENTER );
+
+        setBounds( xOffset, yOffset, 300, 300 );
+        xOffset = ( xOffset + 30 ) % 300;
+        yOffset = ( yOffset + 30 ) % 300;
 
     }
 

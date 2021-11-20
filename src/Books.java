@@ -7,7 +7,7 @@ public class Books extends JFrame {
     private JDesktopPane desktopPane;
 
     Action newAction,saveAction,
-            deleteAction,searchAction,exitAction;
+            deleteAction,searchAuthor,searchBook,exitAction;
 
     public Books(){
         super("Books Database");
@@ -22,20 +22,23 @@ public class Books extends JFrame {
         saveAction.setEnabled(false);
         deleteAction = new DeleteAction();
         deleteAction.setEnabled(false);
-        searchAction = new SearchAction();
+        searchAuthor = new SearchAuthor();
+        searchBook = new SearchBook();
         exitAction = new ExitAction();
         //....
         toolBar.add(newAction);
         toolBar.add(saveAction);
         toolBar.add(deleteAction);
         toolBar.add( new JToolBar.Separator() );
-        toolBar.add(searchAction);
+        toolBar.add(searchAuthor);
+        toolBar.add(searchBook);
 
         fileMenu.add( newAction );
         fileMenu.add( saveAction );
         fileMenu.add( deleteAction );
         fileMenu.addSeparator();
-        fileMenu.add( searchAction );
+        fileMenu.add( searchAuthor );
+        fileMenu.add( searchBook );
         fileMenu.addSeparator();
         fileMenu.add( exitAction );
 
@@ -102,7 +105,12 @@ public class Books extends JFrame {
 
     public static void main( String args[] )
     {
-        new Books();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new Books();
+            }
+        });
     }
 
 
@@ -164,15 +172,30 @@ public class Books extends JFrame {
 
         }
     }
-    private class SearchAction extends AbstractAction{      //books or authors
-        public SearchAction() {
-            putValue( NAME, "Search" );
+    private class SearchAuthor extends AbstractAction{      //books or authors
+        public SearchAuthor() {
+            putValue( NAME, "Search Author" );
             putValue( SMALL_ICON, new ImageIcon(
                     getClass().getResource( "images/Find24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "Search" );
+            putValue( SHORT_DESCRIPTION, "Search Author" );
             putValue( LONG_DESCRIPTION,
-                    "Search for an address book entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'r' ) );
+                    "Search for any books from the Author" );
+            putValue( MNEMONIC_KEY, new Integer( 'a' ) );
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+        }
+    }
+    private class SearchBook extends AbstractAction{      //books or authors
+        public SearchBook() {
+            putValue( NAME, "Search Books" );
+            putValue( SMALL_ICON, new ImageIcon(
+                    getClass().getResource( "images/Find24.png" ) ) );
+            putValue( SHORT_DESCRIPTION, "Search Books" );
+            putValue( LONG_DESCRIPTION,
+                    "Search for a Book" );
+            putValue( MNEMONIC_KEY, new Integer( 'b' ) );
         }
         @Override
         public void actionPerformed(ActionEvent e) {
