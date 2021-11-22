@@ -7,7 +7,7 @@ public class DataEntry {
     private String publisherName = "";
     private String title = "";
     private int editionNum;
-    private int copyrightYear;
+    private String copyrightYear;
     private String imageFile = "";
     private double price;
 
@@ -18,6 +18,8 @@ public class DataEntry {
     {
         authorID = id;
     }
+
+    public int getAuthorID(){return authorID;}
 
     public String getFirstName() {
         return firstName;
@@ -72,16 +74,14 @@ public class DataEntry {
     }
 
     public void setEditionNum(String editionNum) {
-        this.editionNum = Integer.getInteger(editionNum);
+        this.editionNum = Integer.valueOf(editionNum);
     }
 
-    public int getCopyrightYear() {
+    public String getCopyrightYear() {
         return copyrightYear;
     }
 
-    public void setCopyrightYear(String copyrightYear) {
-        this.copyrightYear = Integer.getInteger(copyrightYear);
-    }
+    public void setCopyrightYear(String copyrightYear) {this.copyrightYear = copyrightYear;   }
 
     public String getImageFile() {
         return imageFile;
