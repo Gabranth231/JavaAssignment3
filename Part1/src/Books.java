@@ -2,30 +2,44 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 
 public class Books extends JFrame {
     private JDesktopPane desktopPane;
+    private ResultSetTableModel tableModel;
+    private JTable resultTable;
+    Container border;
+    Container content;
 
-    Action newAuthor,newTitle,newPublisher,saveAction,
-            deleteAction,searchAuthor,searchBook,exitAction;
+    Action newAuthor, newTitle, newPublisher, saveAction,
+            deleteAction, searchAuthor, searchBook, exitAction;
 
     private BooksDataAccess dataAccess;
 
-    public Books(){
+    public Books() throws SQLException, ClassNotFoundException {
         super("Books Database");
+        String driver = "com.mysql.cj.jdbc.Driver";
+
+        // URL to connect to books database
+        String url = "jdbc:mysql://localhost:3306/books";
+
+        // query to select entire authors table
+        String query = "SELECT * FROM authors";
 
         try {
             dataAccess = new CloudDataAccess();
         }
 
         // detect problems with database connection
-        catch ( Exception exception ) {
+        catch (Exception exception) {
             exception.printStackTrace();
-            System.exit( 1 );
+            System.exit(1);
         }
         JToolBar toolBar = new JToolBar();
+        tableModel = new ResultSetTableModel(driver, url, query);
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic('F');
 
@@ -46,34 +60,39 @@ public class Books extends JFrame {
         toolBar.add(newTitle);
         toolBar.add(saveAction);
         toolBar.add(deleteAction);
-        toolBar.add( new JToolBar.Separator() );
+        toolBar.add(new JToolBar.Separator());
         toolBar.add(searchAuthor);
         toolBar.add(searchBook);
 
-        fileMenu.add( newAuthor );
+        fileMenu.add(newAuthor);
         fileMenu.add(newPublisher);
         fileMenu.add(newTitle);
-        fileMenu.add( saveAction );
-        fileMenu.add( deleteAction );
+        fileMenu.add(saveAction);
+        fileMenu.add(deleteAction);
         fileMenu.addSeparator();
-        fileMenu.add( searchAuthor );
-        fileMenu.add( searchBook );
+        fileMenu.add(searchAuthor);
+        fileMenu.add(searchBook);
         fileMenu.addSeparator();
-        fileMenu.add( exitAction );
+        fileMenu.add(exitAction);
 
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add( fileMenu );
-        setJMenuBar( menuBar );
+        menuBar.add(fileMenu);
+        setJMenuBar(menuBar);
 
         desktopPane = new JDesktopPane();
-        Container c = getContentPane();
-        c.add( toolBar, BorderLayout.NORTH );
-        c.add( desktopPane, BorderLayout.CENTER );
+        content = new Container();
+        border = getContentPane();
+        resultTable = new JTable(tableModel);
+
+        content.add(new JScrollPane(resultTable),BorderLayout.SOUTH);
+        content.add(desktopPane, BorderLayout.CENTER);
+
+        border.add(toolBar, BorderLayout.NORTH);
+        border.add(content);
 
         addWindowListener(
                 new WindowAdapter() {
-                    public void windowClosing( WindowEvent event )
-                    {
+                    public void windowClosing(WindowEvent event) {
                         shutDown();
                     }
                 }
@@ -84,38 +103,35 @@ public class Books extends JFrame {
         Dimension dimension = toolkit.getScreenSize();
 
         // center window on screen
-        setBounds( 100, 100, dimension.width - 200,
-                dimension.height - 200 );
+        setBounds(100, 100, dimension.width - 200,
+                dimension.height - 200);
 
-        setVisible( true );
+        setVisible(true);
     }
 
-    private void shutDown()
-    {
+    private void shutDown() {
         //database.close();   // close database connection
-        System.exit( 0 );   // terminate program
+        System.exit(0);   // terminate program
     }
-    private DataEntryFrame createDataEntryFrame(int num)
-    {
+
+    private DataEntryFrame createDataEntryFrame(int num) {
         DataEntryFrame frame = new DataEntryFrame(num);
-        setDefaultCloseOperation( DISPOSE_ON_CLOSE );
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         frame.addInternalFrameListener(
                 new InternalFrameAdapter() {
                     // internal frame becomes active frame on desktop
                     public void internalFrameActivated(
-                            InternalFrameEvent event )
-                    {
-                        saveAction.setEnabled( true );
-                        deleteAction.setEnabled( true );
+                            InternalFrameEvent event) {
+                        saveAction.setEnabled(true);
+                        deleteAction.setEnabled(true);
 
                     }
 
                     // internal frame becomes inactive frame on desktop
                     public void internalFrameDeactivated(
-                            InternalFrameEvent event )
-                    {
-                        saveAction.setEnabled( false );
-                        deleteAction.setEnabled( false );
+                            InternalFrameEvent event) {
+                        saveAction.setEnabled(false);
+                        deleteAction.setEnabled(false);
 
                     }
                 }  // end InternalFrameAdapter anonymous inner class
@@ -124,32 +140,36 @@ public class Books extends JFrame {
         return frame;
     }  // end method createAddressBookEntryFrame
 
-    public static void main( String args[] )
-    {
+    public static void main(String args[]) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                new Books();
+                try {
+                    new Books();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
 
-    private class NewAuthor extends AbstractAction{
+    private class NewAuthor extends AbstractAction {
 
         public NewAuthor() {
-            putValue( NAME, "NewAuthor" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/New24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "NewA" );
-            putValue( LONG_DESCRIPTION,
-                    "Add a new Author entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'N' ) );
+            putValue(NAME, "NewAuthor");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/New24.png")));
+            putValue(SHORT_DESCRIPTION, "NewA");
+            putValue(LONG_DESCRIPTION,
+                    "Add a new Author entry");
+            putValue(MNEMONIC_KEY, new Integer('N'));
         }
 
         // display window in which user can input entry
-        public void actionPerformed( ActionEvent e )
-        {
+        public void actionPerformed(ActionEvent e) {
             DataEntryFrame entryFrame =
                     createDataEntryFrame(1);
 
@@ -158,25 +178,25 @@ public class Books extends JFrame {
                     new DataEntry());
 
             // display window
-            desktopPane.add( entryFrame );
-            entryFrame.setVisible( true );
+            desktopPane.add(entryFrame);
+            entryFrame.setVisible(true);
         }
     }
-    private class NewTitle extends AbstractAction{
+
+    private class NewTitle extends AbstractAction {
 
         public NewTitle() {
-            putValue( NAME, "NewTitle" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/New24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "NewT" );
-            putValue( LONG_DESCRIPTION,
-                    "Add a new Title entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'T' ) );
+            putValue(NAME, "NewTitle");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/New24.png")));
+            putValue(SHORT_DESCRIPTION, "NewT");
+            putValue(LONG_DESCRIPTION,
+                    "Add a new Title entry");
+            putValue(MNEMONIC_KEY, new Integer('T'));
         }
 
         // display window in which user can input entry
-        public void actionPerformed( ActionEvent e )
-        {
+        public void actionPerformed(ActionEvent e) {
             DataEntryFrame entryFrame =
                     createDataEntryFrame(2);
 
@@ -185,25 +205,25 @@ public class Books extends JFrame {
                     new DataEntry());
 
             // display window
-            desktopPane.add( entryFrame );
-            entryFrame.setVisible( true );
+            desktopPane.add(entryFrame);
+            entryFrame.setVisible(true);
         }
     }
-    private class NewPublisher extends AbstractAction{
+
+    private class NewPublisher extends AbstractAction {
 
         public NewPublisher() {
-            putValue( NAME, "NewPublisher" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/New24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "NewP" );
-            putValue( LONG_DESCRIPTION,
-                    "Add a new Publisher entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'P' ) );
+            putValue(NAME, "NewPublisher");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/New24.png")));
+            putValue(SHORT_DESCRIPTION, "NewP");
+            putValue(LONG_DESCRIPTION,
+                    "Add a new Publisher entry");
+            putValue(MNEMONIC_KEY, new Integer('P'));
         }
 
         // display window in which user can input entry
-        public void actionPerformed( ActionEvent e )
-        {
+        public void actionPerformed(ActionEvent e) {
             DataEntryFrame entryFrame =
                     createDataEntryFrame(3);
 
@@ -212,27 +232,28 @@ public class Books extends JFrame {
                     new DataEntry());
 
             // display window
-            desktopPane.add( entryFrame );
-            entryFrame.setVisible( true );
+            desktopPane.add(entryFrame);
+            entryFrame.setVisible(true);
         }
     }
 
-    private class SaveAction extends AbstractAction{
+    private class SaveAction extends AbstractAction {
         public SaveAction() {
-            putValue( NAME, "Save" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/Save24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "Save" );
-            putValue( LONG_DESCRIPTION,
-                    "Save an address book entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'S' ) );
+            putValue(NAME, "Save");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/Save24.png")));
+            putValue(SHORT_DESCRIPTION, "Save");
+            putValue(LONG_DESCRIPTION,
+                    "Save an address book entry");
+            putValue(MNEMONIC_KEY, new Integer('S'));
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             String operation = "";
             // get currently active window
             DataEntryFrame currentFrame =
-                    ( DataEntryFrame ) desktopPane.getSelectedFrame();
+                    (DataEntryFrame) desktopPane.getSelectedFrame();
 
             // obtain AddressBookEntry from window
             DataEntry entry =
@@ -240,7 +261,7 @@ public class Books extends JFrame {
             String currentEntry = currentFrame.getTitle();
             // insert person in address book
             try {
-                switch(currentEntry) {
+                switch (currentEntry) {
                     case "Author Entry":
                         int authorID = entry.getAuthorID();
 
@@ -262,14 +283,13 @@ public class Books extends JFrame {
 
                         operation = (AuthorID == 0) ? "Insertion " : "Update ";
                         boolean check;
-                        if(AuthorID == 0)
+                        if (AuthorID == 0)
                             check = dataAccess.newTitle(entry);
                         else
                             check = dataAccess.saveEntry(entry);
-                        if(check) {
+                        if (check) {
                             JOptionPane.showMessageDialog(desktopPane, operation + "Successful");
-                        }
-                        else{
+                        } else {
                             JOptionPane.showMessageDialog(desktopPane, operation + "Failed");
                         }
                         break;
@@ -278,22 +298,22 @@ public class Books extends JFrame {
 
                         operation = (publisherID == 0) ? "Insertion" : "Update";
 
-                        if(publisherID == 0)
+                        if (publisherID == 0)
                             dataAccess.newPublisher(entry);
                         else
                             dataAccess.saveEntry(entry);
 
-                        JOptionPane.showMessageDialog(desktopPane,operation+"succesful");
+                        JOptionPane.showMessageDialog(desktopPane, operation + "succesful");
                         break;
 
                 }
             }  // end try
 
             // detect database errors
-            catch ( SQLException exception ) {
-                JOptionPane.showMessageDialog( desktopPane, exception,
+            catch (SQLException exception) {
+                JOptionPane.showMessageDialog(desktopPane, exception,
                         "DataAccessException",
-                        JOptionPane.ERROR_MESSAGE );
+                        JOptionPane.ERROR_MESSAGE);
                 exception.printStackTrace();
             }
 
@@ -301,77 +321,79 @@ public class Books extends JFrame {
             currentFrame.dispose();
         }
     }
-    private class DeleteAction extends AbstractAction{
+
+    private class DeleteAction extends AbstractAction {
         public DeleteAction() {
-            putValue( NAME, "Delete" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/Delete24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "Delete" );
-            putValue( LONG_DESCRIPTION,
-                    "Delete an address book entry" );
-            putValue( MNEMONIC_KEY, new Integer( 'D' ) );
+            putValue(NAME, "Delete");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/Delete24.png")));
+            putValue(SHORT_DESCRIPTION, "Delete");
+            putValue(LONG_DESCRIPTION,
+                    "Delete an address book entry");
+            putValue(MNEMONIC_KEY, new Integer('D'));
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             DataEntryFrame currentFrame =
-                    ( DataEntryFrame ) desktopPane.getSelectedFrame();
+                    (DataEntryFrame) desktopPane.getSelectedFrame();
 
             // get AddressBookEntry from window
             DataEntry dataEntry =
                     currentFrame.getDataEntry();
-            String frameType= currentFrame.getTitle();
+            String frameType = currentFrame.getTitle();
 
-            switch (frameType){
+            switch (frameType) {
                 case "Author Entry":
-                    if(dataEntry.getAuthorID() == 0){
-                        JOptionPane.showMessageDialog( desktopPane,
-                        "New entries must be saved before they can be " +
-                                "deleted. \nTo cancel a new entry, simply " +
-                                "close the window containing the entry" );
+                    if (dataEntry.getAuthorID() == 0) {
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "New entries must be saved before they can be " +
+                                        "deleted. \nTo cancel a new entry, simply " +
+                                        "close the window containing the entry");
                         return;
                     }
-                    try{
+                    try {
                         dataAccess.deleteAuthor(dataEntry);
                         // display message indicating success
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion successful" );
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion successful");
                     } catch (HeadlessException headlessException) {
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion Failed" );
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion Failed");
                     }
                     break;
                 case "Title Entry":
-                    if(dataEntry.getIsbn().isEmpty()){
-                        JOptionPane.showMessageDialog( desktopPane,
-                    "New entries must be saved before they can be " +
-                            "deleted. \nTo cancel a new entry, simply " +
-                            "close the window containing the entry" );
+                    if (dataEntry.getIsbn().isEmpty()) {
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "New entries must be saved before they can be " +
+                                        "deleted. \nTo cancel a new entry, simply " +
+                                        "close the window containing the entry");
                         return;
                     }
-                    try{
+                    try {
                         dataAccess.deleteTitle(dataEntry);
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion successful" );
-                    }   catch (HeadlessException headlessException) {
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion Failed" );
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion successful");
+                    } catch (HeadlessException headlessException) {
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion Failed");
                     }
                     break;
                 case "Publisher Entry":
-                    if(dataEntry.getPublisherID() == 0){
-                        JOptionPane.showMessageDialog( desktopPane,
+                    if (dataEntry.getPublisherID() == 0) {
+                        JOptionPane.showMessageDialog(desktopPane,
                                 "New entries must be saved before they can be " +
                                         "deleted. \nTo cancel a new entry, simply " +
-                                        "close the window containing the entry" );
+                                        "close the window containing the entry");
                         return;
                     }
-                    try{
+                    try {
                         dataAccess.deletePublisher(dataEntry);
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion successful" );
-                    }   catch (HeadlessException headlessException) {
-                        JOptionPane.showMessageDialog( desktopPane,
-                                "Deletion Failed" );
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion successful");
+                    } catch (HeadlessException headlessException) {
+                        JOptionPane.showMessageDialog(desktopPane,
+                                "Deletion Failed");
                     }
                     break;
             }
@@ -379,63 +401,64 @@ public class Books extends JFrame {
             currentFrame.dispose();
         }
     }
-    private class SearchAuthor extends AbstractAction{      //books or authors
+
+    private class SearchAuthor extends AbstractAction {      //books or authors
         public SearchAuthor() {
-            putValue( NAME, "Search Author" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/Find24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "Search Author" );
-            putValue( LONG_DESCRIPTION,
-                    "Search for any books from the Author" );
-            putValue( MNEMONIC_KEY, new Integer( 'a' ) );
+            putValue(NAME, "Search Author");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/Find24.png")));
+            putValue(SHORT_DESCRIPTION, "Search Author");
+            putValue(LONG_DESCRIPTION,
+                    "Search for any books from the Author");
+            putValue(MNEMONIC_KEY, new Integer('a'));
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
 
             String firstName =
-                    JOptionPane.showInputDialog( desktopPane,
-                            "Enter author First name" );
+                    JOptionPane.showInputDialog(desktopPane,
+                            "Enter author First name");
             String lastName =
-                    JOptionPane.showInputDialog( desktopPane,
-                            "Enter author last name" );
+                    JOptionPane.showInputDialog(desktopPane,
+                            "Enter author last name");
 
-            List<DataEntry> books = dataAccess.findAuthor(firstName,lastName);
-
-            if(books != null){
-                DataEntryFrame authorFrame = createDataEntryFrame(1);
-                authorFrame.setDataEntry(books.get(0));
-                desktopPane.add(authorFrame);
-                authorFrame.setVisible(true);
-
-                for(DataEntry dataEntry : books){
-                    DataEntryFrame dataEntryFrame = createDataEntryFrame(2);
-                    dataEntryFrame.setDataEntry(dataEntry);
-                    desktopPane.add(dataEntryFrame);
-                    dataEntryFrame.setVisible(true);
+            ResultSet resultSet = dataAccess.findAuthor(firstName, lastName);
+            try {
+                if (content.getComponentCount() > 1) {
+                    content.remove(content.getComponent(1));
                 }
 
+                resultTable = new JTable(new ResultSetTableModel(resultSet));
+                content.add(new JScrollPane(resultTable));
+                revalidate();
+                repaint();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
             }
         }
     }
-    private class SearchBook extends AbstractAction{      //books or authors
+
+    private class SearchBook extends AbstractAction {      //books or authors
         public SearchBook() {
-            putValue( NAME, "Search Books" );
-            putValue( SMALL_ICON, new ImageIcon(
-                    getClass().getResource( "images/Find24.png" ) ) );
-            putValue( SHORT_DESCRIPTION, "Search Books" );
-            putValue( LONG_DESCRIPTION,
-                    "Search for a Book" );
-            putValue( MNEMONIC_KEY, new Integer( 'b' ) );
+            putValue(NAME, "Search Books");
+            putValue(SMALL_ICON, new ImageIcon(
+                    getClass().getResource("images/Find24.png")));
+            putValue(SHORT_DESCRIPTION, "Search Books");
+            putValue(LONG_DESCRIPTION,
+                    "Search for a Book");
+            putValue(MNEMONIC_KEY, new Integer('b'));
         }
+
         @Override
         public void actionPerformed(ActionEvent e) {
             String title =
-                    JOptionPane.showInputDialog( desktopPane,
-                            "Enter Book title" );
+                    JOptionPane.showInputDialog(desktopPane,
+                            "Enter Book title");
 
             DataEntry book = dataAccess.findBook(title);
 
-            if(book != null){
+            if (book != null) {
                 DataEntryFrame dataEntryFrame = createDataEntryFrame(2);
                 dataEntryFrame.setDataEntry(book);
                 desktopPane.add(dataEntryFrame);
@@ -443,15 +466,19 @@ public class Books extends JFrame {
             }
         }
     }
-    private class ExitAction extends AbstractAction{
+
+    private class ExitAction extends AbstractAction {
         public ExitAction() {
-            putValue( NAME, "Exit" );
-            putValue( SHORT_DESCRIPTION, "Exit" );
-            putValue( LONG_DESCRIPTION, "Terminate the program" );
-            putValue( MNEMONIC_KEY, new Integer( 'x' ) );
+            putValue(NAME, "Exit");
+            putValue(SHORT_DESCRIPTION, "Exit");
+            putValue(LONG_DESCRIPTION, "Terminate the program");
+            putValue(MNEMONIC_KEY, new Integer('x'));
         }
+
         @Override
-        public void actionPerformed(ActionEvent e) {shutDown();}
+        public void actionPerformed(ActionEvent e) {
+            shutDown();
+        }
     }
 
 }

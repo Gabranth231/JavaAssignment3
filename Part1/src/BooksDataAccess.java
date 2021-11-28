@@ -1,7 +1,7 @@
 import java.util.List;
 import java.sql.*;
 public interface BooksDataAccess {
-    public List<DataEntry> findAuthor(String authorFirst,String authorLast);
+    public ResultSet findAuthor(String authorFirst,String authorLast);
     public DataEntry findBook(String Title);
     public boolean saveEntry( DataEntry dataEntry);
     public boolean newAuthor(DataEntry dataEntry) throws SQLException;

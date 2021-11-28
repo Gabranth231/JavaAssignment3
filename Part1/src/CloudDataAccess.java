@@ -37,7 +37,7 @@ public class CloudDataAccess implements BooksDataAccess{
         sqlAuthorID = connection.prepareStatement("SELECT authorID FROM authors WHERE firstName = ? AND lastName = ?");
 
         sqlFindAuthorTitles = connection.prepareStatement("SELECT * FROM titles WHERE isbn = ANY (SELECT isbn FROM authorisbn WHERE authorID = " +
-                "ANY (SELECT authorID FROM authors WHERE firstName = ? AND lastName = ?))");
+                "ANY (SELECT authorID FROM authors WHERE firstName = ? AND lastName = ?))",ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
         sqlFindBook = connection.prepareStatement("SELECT*FROM titles WHERE title = ?");
         sqlFindAuthorWithISBN = connection.prepareStatement("SELECT * FROM authors WHERE authorID =" +
                 "(SELECT authorID FROM authorisbn WHERE isbn = ?)");
@@ -64,9 +64,8 @@ public class CloudDataAccess implements BooksDataAccess{
     }
 
     @Override
-    public List<DataEntry> findAuthor(String authorFirst,String authorLast) {
+    public ResultSet findAuthor(String authorFirst,String authorLast) {
         try {
-            List<DataEntry> books = new ArrayList<>();
             // set query parameter and execute query
             sqlFindAuthorTitles.setString( 1, authorFirst);
             sqlFindAuthorTitles.setString( 2, authorLast);
@@ -77,30 +76,7 @@ public class CloudDataAccess implements BooksDataAccess{
             ResultSet AuthorResult = sqlAuthorID.executeQuery();
 
             if(AuthorResult.next()) {
-                 while (resultSet.next()){
-                    // create new AddressBookEntry for ONLY one ///// change to make more
-                    DataEntry book = new DataEntry(AuthorResult.getInt(1));
-
-                    // set AddressBookEntry properties
-                    /*person.setFirstName(resultSet.getString(2));*/
-                    book.setFirstName(authorFirst);
-                    book.setLastName(authorLast);
-                    book.setIsbn(resultSet.getString(1));
-                    book.setTitle(resultSet.getString(2));
-                    book.setEditionNum(resultSet.getString(3));
-                    book.setCopyrightYear(resultSet.getString(4));
-                    book.setPublisherID(Integer.valueOf(resultSet.getString(5)));
-                    book.setImageFile(resultSet.getString(6));
-                    book.setPrice(resultSet.getString(7));
-
-                    books.add(book);
-                }
-                // return AddressBookEntry
-                if (books.isEmpty()) {
-                    return null;
-                } else {
-                    return books;
-                }
+                return resultSet;
             }
         }
 
@@ -119,7 +95,6 @@ public class CloudDataAccess implements BooksDataAccess{
             if(resultSet.next()){
                 sqlFindAuthorWithISBN.setString(1,resultSet.getString(1));
                 ResultSet authorData = sqlFindAuthorWithISBN.executeQuery();
-                authorData.next();
 
                 DataEntry book = new DataEntry(authorData.getInt("authorID"));
                 book.setFirstName(authorData.getString("firstName"));
