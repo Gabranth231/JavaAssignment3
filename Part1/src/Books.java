@@ -81,11 +81,13 @@ public class Books extends JFrame {
 
         desktopPane = new JDesktopPane();
         content = new Container();
+        content.setLayout(new GridLayout(2,1));
         border = getContentPane();
         resultTable = new JTable(tableModel);
 
-        content.add(new JScrollPane(resultTable),BorderLayout.SOUTH);
-        content.add(desktopPane, BorderLayout.CENTER);
+        content.add(desktopPane);
+        content.add(new JScrollPane(resultTable));
+
 
         border.add(toolBar, BorderLayout.NORTH);
         border.add(content);
